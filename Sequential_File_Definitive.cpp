@@ -45,7 +45,9 @@ public:
     
     Record search(index_T key);
 
-    long search_pos(index_T key);
+    long searchDataPos(index_T key);
+
+    long searchNewDataPos(index_T key);
 
     void insert(Record record);
 
@@ -59,6 +61,7 @@ public:
     int readSize(Data _data);
     int readIndexNext(Data _data);
     int readIndexDelete(Data _data);
+    void updateIndexDelete(Data &_data, long pos, Record record);
 
     void insertionSort(std::vector<Record> &records);
 };
@@ -94,7 +97,7 @@ template <class index_T, class Record>
 Record Sequential_File_Definitve<index_T,Record>::search(index_T key) {
     for(long i = 0; i < new_data.size; i+=sizeof(Record)) {
         Record record = readRecord(new_data,i);
-        if(record.index == key) return record;
+        if(record.index == key && record.index_delete == 0) return record;
     }
     if(data.index_next != -1) {
         
@@ -134,11 +137,7 @@ Record Sequential_File_Definitve<index_T,Record>::search(index_T key) {
 }
 
 template <class index_T, class Record>
-long Sequential_File_Definitve<index_T,Record>::search_pos(index_T key) {
-    for(long i = 0; i < new_data.size; i+=sizeof(Record)) {
-        Record record = readRecord(new_data,i);
-        if(record.index == key) return i;
-    }
+long Sequential_File_Definitve<index_T,Record>::searchDataPos(index_T key) {
     if(data.index_next != -1) {
         
         long l = 0;
@@ -172,17 +171,28 @@ long Sequential_File_Definitve<index_T,Record>::search_pos(index_T key) {
             }
         }
     }
-    std::cout << "ERROR: No existe ese indice en la BD\n";
-    return NULL;
+    return -1;
+}
+
+template <class index_T, class Record>
+long Sequential_File_Definitve<index_T,Record>::searchNewDataPos(index_T key) {
+    for(long i = 0; i < new_data.size; i+=sizeof(Record)) {
+        Record record = readRecord(new_data,i);
+        if(record.index == key && record.index_delete == 0) return i;
+    }
+    return -1;
 }
 
 template <class index_T, class Record>
 void Sequential_File_Definitve<index_T,Record>::insert(Record record) {
     if(new_data.size < 5*sizeof(Record)) {
+        record.index_delete = 0;
+        record.index_next = -1;
         std::fstream stream(new_data.name, std::ios::in | std::ios::out | std::ios::binary);    
         stream.seekp(3*sizeof(int)+new_data.size*sizeof(Record));
         stream.write((char*)&record, sizeof(Record));
         stream.close(); 
+
     } else {
         rebuild();
     }
@@ -190,8 +200,16 @@ void Sequential_File_Definitve<index_T,Record>::insert(Record record) {
 
 template <class index_T, class Record>
 void Sequential_File_Definitve<index_T,Record>::_delete(index_T key) {
-    long pos = search_pos(key);
-    
+    long pos = searchNewDataPos(key);
+    if(pos != -1) {
+        Record record = readRecord(new_data, pos);
+        updateIndexDelete(new_data, pos, record);
+    }
+    pos = searchDataPos(key);
+    if(pos != -1) {
+        Record record = readRecord(data, pos);
+        updateIndexDelete(data, pos, record);
+    }
 }
 
 template <class index_T, class Record>
@@ -216,7 +234,7 @@ template <class index_T, class Record>
 Record Sequential_File_Definitve<index_T,Record>::readRecord(Data _data, long pos) {
     Record record;
     std::fstream stream(_data.name, std::ios::in | std::ios::binary);
-    stream.seekg(3*sizeof(int)+pos*sizeof(Record));
+    stream.seekg(3*sizeof(int)+pos);
     stream.read((char*)&record, sizeof(Record));
     stream.close();
     return record;
@@ -225,7 +243,7 @@ Record Sequential_File_Definitve<index_T,Record>::readRecord(Data _data, long po
 template <class index_T, class Record>
 void Sequential_File_Definitve<index_T,Record>::writeRecord(Data _data, long pos, Record record) {
     std::fstream stream(_data.name, std::ios::in | std::ios::out | std::ios::binary);
-    stream.seekp(3*sizeof(int)+pos*sizeof(Record));
+    stream.seekp(3*sizeof(int)+pos);
     stream.write((char*)&record, sizeof(Record));
     data.size += sizeof(Record);
     stream.close();
@@ -273,6 +291,19 @@ int Sequential_File_Definitve<index_T,Record>::readIndexDelete(Data _data) {
     stream.read((char*)&index_delete, sizeof(int));
     stream.close();
     return index_delete;
+}
+
+
+template <class index_T, class Record>
+void Sequential_File_Definitve<index_T,Record>::updateIndexDelete(Data &_data, long pos, Record record) {
+    record.index_delete = _data.index_delete;
+    _data.index_delete = pos;
+    std::fstream stream(_data.name, std::ios::in | std::ios::out | std::ios::binary);
+    stream.seekp(0, 2*sizeof(int));
+    stream.write((char*)&pos, sizeof(int));
+    stream.seekp(0, 3*sizeof(int)+pos);
+    stream.write((char*)&record, sizeof(Record));
+    stream.close();
 }
 
 template <class index_T, class Record>
