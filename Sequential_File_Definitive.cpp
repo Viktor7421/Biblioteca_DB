@@ -120,7 +120,7 @@ Record creacionRegistro(std::string species_id, std::string genus, std::string s
 
 int main()  {
     Sequential_File_Definitve DataBase("data_SF.dat","new_data_SF.dat");
-    Record ave_1 = creacionRegistro("AB","Amphispiza","bilineata","Bird");
+    Record ave_1 = creacionRegistro("HB","Amphispiza","bilineata","Bird");
     DataBase.insert(ave_1);
     Record ave_2 = DataBase.search(ave_1.index);
     std::cout << ave_2;
@@ -130,7 +130,6 @@ int main()  {
 Sequential_File_Definitve::Sequential_File_Definitve(std::string _data, std::string _new_data) {
     data.name = _data;
     if(data.empty()) {
-        std::cout << "Vacio Data\n";
         fillNewFile(data);
     }
     data.size = readSize(data); //encontrar el size en el archivo
@@ -139,7 +138,6 @@ Sequential_File_Definitve::Sequential_File_Definitve(std::string _data, std::str
 
     new_data.name = _new_data;
     if(new_data.empty()) {        
-        std::cout << "Vacio New Data\n";
         fillNewFile(new_data);
     }
     new_data.size = readSize(new_data); //encontrar el size en el archivo
@@ -203,7 +201,8 @@ int Sequential_File_Definitve::searchDataPos(index_T key) {
 int Sequential_File_Definitve::searchNewDataPos(index_T key) {
     for(int i = 0; i < new_data.size; i+=sizeof(Record)) {
         Record record = readRecord(new_data,i);
-        if(record.index == key && record.index_delete == 0) return i;
+        std::cout << record.index << ' ' << key << '\n';
+        if(record.index[0] == key[0] && record.index[1] == key[1] && record.index_delete == 0) return i;
     }
     return -1;
 }
@@ -211,7 +210,7 @@ int Sequential_File_Definitve::searchNewDataPos(index_T key) {
 void Sequential_File_Definitve::insert(Record record) {
     int pos1 = searchNewDataPos(record.index);
     int pos2 = searchDataPos(record.index);
-    if(pos1 == -1 || pos2 == -1) {std::cout << "Ese archivo ya existe."; return;}
+    if(pos1 != -1 || pos2 != -1) {std::cout << "Ese archivo ya existe.\n"; return;}
     if(new_data.size < 5*sizeof(Record)) {
         record.index_delete = 0;
         updateNewDataSize();     
