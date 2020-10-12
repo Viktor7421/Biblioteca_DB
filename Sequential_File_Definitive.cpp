@@ -118,7 +118,7 @@ Record creacionRegistro(std::string species_id, std::string genus, std::string s
 }
 
 int main()  {
-    Sequential_File_Definitve DataBase("data_SF.dat","new_data_SF.dat");
+    Sequential_File_Definitve DataBase("dataexample.dat","dataoexample.dat");
     Record ave_1 = creacionRegistro("BA","Amphispiza","bilineata","Bird");
     Record ave_2 = creacionRegistro("LF","Amphispiza","bilineata","Bird");
     Record ave_3 = creacionRegistro("FX","Amphispiza","bilineata","Bird");
