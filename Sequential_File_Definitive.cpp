@@ -4,11 +4,12 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <boost/algorithm/string.hpp>
 
 #define index_T char*
 
 struct Record {
-    char index [2];
+    char index [4];
     char genus [30];
     char species [20];
     char taxa [20];
@@ -16,7 +17,7 @@ struct Record {
 };
 
 std::istream & operator >> (std::istream & stream, Record & record) {
-    stream.read(record.index, 2);
+    stream.read(record.index, 4);
     stream.read(record.genus, 30);
     stream.read(record.species, 20);
     stream.read(record.taxa, 20);
@@ -25,7 +26,7 @@ std::istream & operator >> (std::istream & stream, Record & record) {
 }
 
 std::ostream & operator << (std::ostream & stream, Record & record) {
-    stream.write(record.index, 2);
+    stream.write(record.index, 4);
     stream.write(record.genus, 30);
     stream.write(record.species, 20);
     stream.write(record.taxa, 20);
@@ -64,6 +65,8 @@ public:
 
     int searchNewDataPos(index_T key);
 
+    std::vector<Record> get_csv(const std::string& filename);
+
     void insert(Record record);
 
     void _delete(index_T key);
@@ -86,7 +89,7 @@ public:
 
 Record creacionRegistro(std::string species_id, std::string genus, std::string species, std::string taxa) {
     Record record;
-    for(int i = 0; i < 2; i++) {
+    for(int i = 0; i < 4; i++) {
         if(i < species_id.length()) {
             record.index[i] = species_id[i];
         } else {
@@ -119,6 +122,7 @@ Record creacionRegistro(std::string species_id, std::string genus, std::string s
 
 int main()  {
     Sequential_File_Definitve DataBase("dataexample.dat","dataoexample.dat");
+    //DataBase.get_csv("species.csv");
     Record ave_1 = creacionRegistro("BA","Amphispiza","bilineata","Bird");
     Record ave_2 = creacionRegistro("LF","Amphispiza","bilineata","Bird");
     Record ave_3 = creacionRegistro("FX","Amphispiza","bilineata","Bird");
@@ -375,4 +379,25 @@ void Sequential_File_Definitve::insertionSort(std::vector<Record> &records) {
         }  
         records[j + 1] = key;  
     }
+}
+std::vector<Record> Sequential_File_Definitve::get_csv(const std::string &filename) {
+    std::ifstream file(filename);
+    std::vector<std::vector<std::string >>tempdata;
+    std::vector<Record> species;
+    std::string line=" ";
+    while (getline(file,line)) {
+        std::vector<std::string> temp;
+        boost::algorithm::split(temp, line, boost::is_any_of(","));
+        tempdata.push_back(temp);
+    }
+    file.close();
+    for(std::vector<std::string> vec:tempdata){
+        Record temp;
+        strcpy(temp.index,vec[0].c_str());
+        strcpy(temp.genus,vec[1].c_str());
+        strcpy(temp.species,vec[2].c_str());
+        strcpy(temp.taxa,vec[3].c_str());
+        species.emplace_back(temp);
+    }
+    return species;
 }
