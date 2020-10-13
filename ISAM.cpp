@@ -5,6 +5,11 @@
 #include <cstring>
 
 #define index_T char*
+#define INDEX_SIZE 2
+#define SUB_INDEX_SIZE 1
+#define index_pair std::pair<char,int>
+#define LIVE -2
+#define BUCKET_SIZE 27
 
 struct Record {
     char index [4];
@@ -67,16 +72,18 @@ public:
 
     void rebuild();
 
-    Record readRecord(Data _data,  int pos);
-    void writeRecord(Data _data, int pos, Record record);
-    void writeIndex(Data _data, int pos, index_T _index);
+    Record readRecord(int pos);
+    index_pair readIndex(int pos);
+    void writeRecord(int pos, Record record);
+    void writeIndex(int pos, index_T _index);
     void fillNewFile(Data _data);
     int readSize(Data _data);
     int readIndexNext(Data _data);
     int readIndexDelete(Data _data);
     void updateIndexNewDelete(Data &_data, int pos, Record record);
     void updateIndexLoseDelete(Data &_data, Record record);
-    void insertionSort(std::vector<std::pair<char*, int>> &_indexs);
+    void updateDataSize();
+    void insertionSort(std::vector<index_pair> &_indexs);
 };
 
 Record createRecord(std::string species_id, std::string genus, std::string species, std::string taxa) {
@@ -159,110 +166,111 @@ ISAM::~ISAM() {}
 Record ISAM::search(index_T key) {
     Record record;
     int l = 0;
-    int u = data.size-sizeof(Record);
-    while (u >= l) {
-        int m = (l+u)/2;
-        record = readRecord(data, m); // dilema de escoger un archivo eliminado 
-        for(int i = 0; record.index_delete != 0; i++) {
-            Record record_temp = readRecord(data, m+i*sizeof(Record)); // Evalua no eliminado hacia abajo
-            if(record_temp.index_delete != 0) {record = record_temp; m=m+i*sizeof(Record); break;}
-            
-            record_temp = readRecord(data, m-i*sizeof(Record)); // Evalua no eliminado hacia arriba
-            if(record_temp.index_delete != 0) {record = record_temp; m=m-i*sizeof(Record); break;} 
+    int u = (index.size/(sizeof(record.index)+sizeof(int)))-1;
+    for(int i = 0; i < INDEX_SIZE; i++)
+        while (u >= l) {
+            int m = (l+u)/2;
+            index_pair _index = readIndex(m*(SUB_INDEX_SIZE+sizeof(int)));
+            if (_index.first > key[i]) u = m-1; 
+            else if (_index.first < key[i]) l = m+1;
+            else if (record.index_delete != LIVE) break;
+            else {record = readRecord(_index.second); return record;}
         }
-        
-        if (record.index[0] > key[0]) u = m-sizeof(Record); // cambiar record.index por el indice
-        else if (record.index[0] < key[0]) l = m+sizeof(Record);
-        else if (record.index[1] > key[1]) u = m-sizeof(Record);
-        else if (record.index[1] < key[1]) l = m+sizeof(Record);
-        else return record;
-    }
+    record = createRecord("","","","");
     return record;
 }
 
 int ISAM::searchDataPos(index_T key) {
+    Record record;
     int l = 0;
-    int u = (data.size/sizeof(Record))-1;
-    while (u >= l) {
-        int m = (l+u)/2;
-        Record record = readRecord(data, m*sizeof(Record)); // dilema de escoger un archivo eliminado 
-        for(int i = 0; record.index_delete != 0; i++) {
-            Record record_temp = readRecord(data, m*sizeof(Record)+i*sizeof(Record)); // Evalua no eliminado hacia abajo
-            if(record_temp.index_delete != 0) {record = record_temp; m=m+i*sizeof(Record); break;}
-            
-            record_temp = readRecord(data, m*sizeof(Record)-i*sizeof(Record)); // Evalua no eliminado hacia arriba
-            if(record_temp.index_delete != 0) {record = record_temp; m=m-i*sizeof(Record); break;} 
+    int u = (index.size/(SUB_INDEX_SIZE+sizeof(int)))-1;
+    for(int i = 0; i < INDEX_SIZE; i++)
+        while (u >= l) {
+            int m = (l+u)/2;
+            index_pair _index = readIndex(m*(1+sizeof(int)));
+            if (_index.first > key[i]) u = m-1;
+            else if (_index.first < key[i]) l = m+1;
+            else if (record.index_delete != LIVE) break;
+            else return m*(SUB_INDEX_SIZE+sizeof(int));
         }
-        if (record.index[0] > key[0]) u = m-sizeof(Record); // cambiar record.index por el indice
-        else if (record.index[0] < key[0]) l = m+sizeof(Record);
-        else if (record.index[1] > key[1]) u = m-sizeof(Record);
-        else if (record.index[1] < key[1]) l = m+sizeof(Record);
-        else return m*sizeof(Record);
-    }
     return -1;
 }
 
 void ISAM::insert(Record record) {
-    int pos2 = searchDataPos(record.index);
-    record.index_delete = 0;
+    int pos = searchDataPos(record.index);
+    record.index_delete = LIVE;
+    if(pos != -1) {std::cout << "Ese archivo ya existe.\n"; return;}
     if(index.index_delete == -1) {
-        writeRecord(data,data.size,record);
-        writeIndex(index,data.size,record.index);
+        writeRecord(data.size,record);
+        writeIndex(data.size,record.index);
+        updateDataSize();
     } else {
-        std::cout << index.index_delete << '\n';
-        Record record_delete = readRecord(index,index.index_delete);
-        writeRecord(index,index.index_delete,record);
-        writeIndex(index,index.index_delete,record.index);
+        Record record_delete = readRecord(data.index_delete);
+        writeRecord(data.index_delete,record);
+        updateIndexLoseDelete(data,record_delete);
+        writeIndex(index.index_delete,record.index);
         updateIndexLoseDelete(index,record_delete);
+        updateDataSize();
     }
 }
 
 void ISAM::_delete(index_T key) {
     int pos = searchDataPos(key);
     if(pos != -1) {
-        Record record = readRecord(data, pos);
+        Record record = readRecord(pos);
         updateIndexNewDelete(data, pos, record);
     }
 }
 
-Record ISAM::readRecord(Data _data, int pos) {
+Record ISAM::readRecord(int pos) {
     Record record;
-    std::fstream stream(_data.name, std::ios::in | std::ios::binary);
+    std::fstream stream(data.name, std::ios::in | std::ios::binary);
     stream.seekg(2*sizeof(int)+pos, stream.beg);
     stream.read((char*)&record, sizeof(Record));
     stream.close();
     return record;
 }
 
-void ISAM::writeRecord(Data _data, int pos, Record record) {
-    std::fstream stream(_data.name, std::ios::in | std::ios::out | std::ios::binary);
+
+index_pair ISAM::readIndex(int pos) {
+    index_pair _index;
+    std::fstream stream(index.name, std::ios::in | std::ios::binary);
+    stream.seekg(2*sizeof(int)+pos, stream.beg);
+    stream.read((char*)&_index.first, SUB_INDEX_SIZE);
+    stream.read((char*)&_index.second, sizeof(int));
+    stream.close();
+    return _index;
+}
+
+void ISAM::writeRecord(int pos, Record record) {
+    std::fstream stream(data.name, std::ios::in | std::ios::out | std::ios::binary);
     stream.seekp(2*sizeof(int)+pos, stream.beg);
     stream.write((char*)&record, sizeof(Record));
-    _data.size += sizeof(Record);
+    data.size += sizeof(Record);
     stream.close();
 }
 
-void ISAM::writeIndex(Data _data, int pos, index_T _index) {
-    std::vector<std::pair<char*,int>> new_records;
-    new_records.push_back({_index,pos});
-    std::fstream stream1(_data.name, std::ios::in | std::ios::out | std::ios::binary);
-    for(int i = 0; i < _data.size; i+=(sizeof(int)+2)) {
+void ISAM::writeIndex(int pos, index_T _index) {
+    std::vector<index_pair> index_vector;
+    index_vector.push_back({_index[0],pos});
+    std::fstream stream1(index.name, std::ios::in | std::ios::out | std::ios::binary);
+    for(int i = 0; i < index.size; i+=(sizeof(int)+SUB_INDEX_SIZE)) {
         int _pos;
-        char __index[2];
-        stream1.seekg(2 * sizeof(int) + i, stream1.beg);
-        stream1.read((char*)&__index, 2);
+        char __index;
+        stream1.seekg(2*sizeof(int) + i, stream1.beg);
+        stream1.read((char*)&__index, SUB_INDEX_SIZE);
         stream1.read((char*)&_pos, sizeof(int));
-        new_records.push_back({__index,_pos});
+        index_vector.push_back({__index,_pos});
     }
     stream1.close();
 
-    insertionSort(new_records);
+    insertionSort(index_vector);
 
-    std::fstream stream2(_data.name, std::ios::in | std::ios::out | std::ios::binary);
-    for(int i = 0; i < new_records.size(); i++) {
-        stream2.seekp(2 * sizeof(int) + i * (2 + sizeof(int)), stream2.beg);
-        stream2.write((char*)&new_records[i].first, 2);
-        stream2.write((char*)&new_records[i].second, sizeof(int));
+    std::fstream stream2(index.name, std::ios::in | std::ios::out | std::ios::binary);
+    for(int i = 0; i < index_vector.size(); i++) {
+        stream2.seekp(2 * sizeof(int) + i * (1 + sizeof(int)), stream2.beg);
+        stream2.write((char*)&index_vector[i].first, 1);
+        stream2.write((char*)&index_vector[i].second, sizeof(int));
     }
     stream1.close();
 }
@@ -312,24 +320,35 @@ void ISAM::updateIndexNewDelete(Data &_data, int pos, Record record) {
 void ISAM::updateIndexLoseDelete(Data &_data, Record record) {
     _data.index_delete = record.index_delete;
     std::fstream stream(_data.name, std::ios::in | std::ios::out | std::ios::binary);
-    stream.seekp(2*sizeof(int), stream.beg);
+    stream.seekp(sizeof(int), stream.beg);
     stream.write((char*)&_data.index_delete, sizeof(int));
     stream.close();
 }
 
+void ISAM::updateDataSize() {
+    data.size += sizeof(Record);
+    index.size += (sizeof(int)+SUB_INDEX_SIZE);
+    std::fstream stream1(data.name, std::ios::in | std::ios::out | std::ios::binary);
+    stream1.seekp(0, stream1.beg);
+    stream1.write((char*)&data.size, sizeof(int));
+    stream1.close();
+    std::fstream stream2(index.name, std::ios::in | std::ios::out | std::ios::binary);
+    stream2.seekp(0, stream2.beg);
+    stream2.write((char*)&index.size, sizeof(int));
+    stream2.close();
+}
 
-
-void ISAM::insertionSort(std::vector<std::pair<char*, int>> &_indexs) {
+void ISAM::insertionSort(std::vector<index_pair> &index_vector) {
     int i, j;
-    std::pair<char*,int> key;
-    for (i = 1; i < _indexs.size(); i++) {  
+    index_pair key;
+    for (i = 1; i < index_vector.size(); i++) {  
         bool cambio;
-        key = _indexs[i];  
+        key = index_vector[i];  
         j = i - 1;  
-        while (j >= 0 && 0 < std::strcmp(_indexs[j].first, key.first)) {  
-            _indexs[j + 1] = _indexs[j];  
+        while (j >= 0 && index_vector[j].first < key.first) {  
+            index_vector[j + 1] = index_vector[j];  
             j = j - 1;  
         }  
-        _indexs[j + 1] = key;  
+        index_vector[j + 1] = key;  
     }
 }

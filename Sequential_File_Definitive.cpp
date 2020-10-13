@@ -131,8 +131,8 @@ int main()  {
     DataBase.get_csv("species.csv");
     /*Record ave_1 = createRecord("BQ","Amphispiza","bilineata","Bird");
     Record ave_2 = createRecord("LQ","Amphispiza","bilineata","Bird");
-    Record ave_3 = createRecord("AQ","Amphispiza","bilineata","Bird");
-    Record ave_4 = createRecord("TQ","Amphispiza","bilineata","Bird");
+    */Record ave_3 = createRecord("AQ","Amphispiza","bilineata","Bird");
+    /*Record ave_4 = createRecord("TQ","Amphispiza","bilineata","Bird");
     Record ave_5 = createRecord("AQ","Amphispiza","bilineata","Bird");
     Record ave_6 = createRecord("VQ","Amphispiza","bilineata","Bird");
     DataBase.insert(ave_1);
@@ -141,8 +141,8 @@ int main()  {
     DataBase.insert(ave_4);
     DataBase.insert(ave_5);
     DataBase.insert(ave_6);*/
-    //Record ave_1 = DataBase.search(ave_3.index);
-    //std::cout << "Ave AD: " << ave_1 << '\n';
+    Record ave_1 = DataBase.search(ave_3.index);
+    std::cout << "Ave AQ: " << ave_1 << '\n';
     //Record ave_2 = DataBase.search(ave_4.index);
     //std::cout << "Ave TS: " << ave_2 << ' ' << '\n';
     //DataBase._delete(ave_3.index);
@@ -186,8 +186,8 @@ Record Sequential_File_Definitve::search(index_T key) {
         else if (record.index_delete != LIVE) break;
         else return record;
     }
-    Record record_null = createRecord("","","","");
-    return record_null;
+    record = createRecord("","","","");
+    return record;
 }
 
 int Sequential_File_Definitve::searchDataPos(index_T key) {
