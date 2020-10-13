@@ -7,6 +7,8 @@
 #include <boost/algorithm/string.hpp>
 
 #define index_T char*
+#define N_new_data 5
+#define LIVE -2
 
 struct Record {
     char index [4];
@@ -87,64 +89,70 @@ public:
     void insertionSort(std::vector<Record> &records);
 };
 
-Record creacionRegistro(std::string species_id, std::string genus, std::string species, std::string taxa) {
+Record createRecord(std::string species_id, std::string genus, std::string species, std::string taxa) {
     Record record;
-    for(int i = 0; i < 4; i++) {
+    for(int i = 0; i < sizeof(record.index)-1; i++) {
         if(i < species_id.length()) {
             record.index[i] = species_id[i];
         } else {
             record.index[i] = ' ';
         }
     }
-    for(int i = 0; i < 30; i++) {
+    record.index[sizeof(record.index)-1] = '\0';
+    for(int i = 0; i < sizeof(record.genus)-1; i++) {
         if(i < genus.length()) {
             record.genus[i] = genus[i];
         } else {
             record.genus[i] = ' ';
         }
     }
-    for(int i = 0; i < 20; i++) {
+    record.genus[sizeof(record.genus)-1] = '\0';
+    for(int i = 0; i < sizeof(record.species)-1; i++) {
         if(i < species.length()) {
             record.species[i] = species[i];
         } else {
             record.species[i] = ' ';
         }
     }
-    for(int i = 0; i < 20; i++) {
+    record.species[sizeof(record.species)-1] = '\0';
+    for(int i = 0; i < sizeof(record.taxa)-1; i++) {
         if(i < taxa.length()) {
             record.taxa[i] = taxa[i];
         } else {
             record.taxa[i] = ' ';
         }
     }
+    record.taxa[sizeof(record.taxa)-1] = '\0';
     return record;
 }
 
 int main()  {
-    Sequential_File_Definitve DataBase("dataexample.dat","dataoexample.dat");
-    //DataBase.get_csv("species.csv");
-    Record ave_1 = creacionRegistro("BA","Amphispiza","bilineata","Bird");
-    Record ave_2 = creacionRegistro("LF","Amphispiza","bilineata","Bird");
-    Record ave_3 = creacionRegistro("FX","Amphispiza","bilineata","Bird");
-    Record ave_4 = creacionRegistro("TW","Amphispiza","bilineata","Bird");
-    Record ave_5 = creacionRegistro("AQ","Amphispiza","bilineata","Bird");
-    Record ave_6 = creacionRegistro("VV","Amphispiza","bilineata","Bird");
+    Sequential_File_Definitve DataBase("data_SF.dat","new_data_SF.dat");
+    DataBase.get_csv("species.csv");
+    /*Record ave_1 = createRecord("BQ","Amphispiza","bilineata","Bird");
+    Record ave_2 = createRecord("LQ","Amphispiza","bilineata","Bird");
+    Record ave_3 = createRecord("AQ","Amphispiza","bilineata","Bird");
+    Record ave_4 = createRecord("TQ","Amphispiza","bilineata","Bird");
+    Record ave_5 = createRecord("AQ","Amphispiza","bilineata","Bird");
+    Record ave_6 = createRecord("VQ","Amphispiza","bilineata","Bird");
     DataBase.insert(ave_1);
     DataBase.insert(ave_2);
     DataBase.insert(ave_3);
     DataBase.insert(ave_4);
     DataBase.insert(ave_5);
-    DataBase.insert(ave_6);
-    //Record ave_2 = DataBase.search(ave_1.index);
-    //std::cout << ave_2;
-    //DataBase._delete("BZ");
+    DataBase.insert(ave_6);*/
+    //Record ave_1 = DataBase.search(ave_3.index);
+    //std::cout << "Ave AD: " << ave_1 << '\n';
+    //Record ave_2 = DataBase.search(ave_4.index);
+    //std::cout << "Ave TS: " << ave_2 << ' ' << '\n';
+    //DataBase._delete(ave_3.index);
+    //DataBase._delete(ave_4.index);
     return 1;
 }
 
 Sequential_File_Definitve::Sequential_File_Definitve(std::string _data, std::string _new_data) {
     data.name = _data;
     if(data.empty()) {
-        std::cout << "Vacio\n";
         fillNewFile(data);
     }
     data.size = readSize(data); //encontrar el size en el archivo
@@ -162,30 +170,24 @@ Sequential_File_Definitve::~Sequential_File_Definitve() {}
 
 Record Sequential_File_Definitve::search(index_T key) {
     Record record;
-    for(int i = 0; i < new_data.size; i+=sizeof(Record)) {
-        record = readRecord(new_data,i);
-        if(record.index == key && record.index_delete == 0) return record;
+    int pos = 0;
+    for(int i = 0; i < new_data.size; pos+=sizeof(Record)) {
+        record = readRecord(new_data,pos);
+        if(0 == std::strcmp(record.index, key) && record.index_delete == LIVE) return record;
+        else if(record.index_delete == LIVE) i+=sizeof(Record);
     }
     int l = 0;
-    int u = data.size-sizeof(Record);
+    int u = (data.size/sizeof(Record))-1;
     while (u >= l) {
         int m = (l+u)/2;
-        record = readRecord(data, m); // dilema de escoger un archivo eliminado 
-        for(int i = 0; record.index_delete != 0; i++) {
-            Record record_temp = readRecord(data, m+i*sizeof(Record)); // Evalua no eliminado hacia abajo
-            if(record_temp.index_delete != 0) {record = record_temp; m=m+i*sizeof(Record); break;}
-            
-            record_temp = readRecord(data, m-i*sizeof(Record)); // Evalua no eliminado hacia arriba
-            if(record_temp.index_delete != 0) {record = record_temp; m=m-i*sizeof(Record); break;} 
-        }
-        
-        if (record.index[0] > key[0]) u = m-sizeof(Record); // cambiar record.index por el indice
-        else if (record.index[0] < key[0]) l = m+sizeof(Record);
-        else if (record.index[1] > key[1]) u = m-sizeof(Record);
-        else if (record.index[1] < key[1]) l = m+sizeof(Record);
+        record = readRecord(data, m*sizeof(Record)); 
+        if (0 < std::strcmp(record.index, key)) u = m-1; 
+        else if (0 > std::strcmp(record.index, key)) l = m+1;
+        else if (record.index_delete != LIVE) break;
         else return record;
     }
-    return record;
+    Record record_null = createRecord("","","","");
+    return record_null;
 }
 
 int Sequential_File_Definitve::searchDataPos(index_T key) {
@@ -193,27 +195,21 @@ int Sequential_File_Definitve::searchDataPos(index_T key) {
     int u = (data.size/sizeof(Record))-1;
     while (u >= l) {
         int m = (l+u)/2;
-        Record record = readRecord(data, m*sizeof(Record)); // dilema de escoger un archivo eliminado 
-        for(int i = 0; record.index_delete != 0; i++) {
-            Record record_temp = readRecord(data, m*sizeof(Record)+i*sizeof(Record)); // Evalua no eliminado hacia abajo
-            if(record_temp.index_delete != 0) {record = record_temp; m=m+i*sizeof(Record); break;}
-            
-            record_temp = readRecord(data, m*sizeof(Record)-i*sizeof(Record)); // Evalua no eliminado hacia arriba
-            if(record_temp.index_delete != 0) {record = record_temp; m=m-i*sizeof(Record); break;} 
-        }
-        if (record.index[0] > key[0]) u = m-sizeof(Record); // cambiar record.index por el indice
-        else if (record.index[0] < key[0]) l = m+sizeof(Record);
-        else if (record.index[1] > key[1]) u = m-sizeof(Record);
-        else if (record.index[1] < key[1]) l = m+sizeof(Record);
+        Record record = readRecord(data, m*sizeof(Record));
+        if (0 < std::strcmp(record.index, key)) u = m-1; 
+        else if (0 > std::strcmp(record.index, key)) l = m+1;
+        else if (record.index_delete != LIVE) break;
         else return m*sizeof(Record);
     }
     return -1;
 }
 
 int Sequential_File_Definitve::searchNewDataPos(index_T key) {
-    for(int i = 0; i < new_data.size; i+=sizeof(Record)) {
-        Record record = readRecord(new_data,i);
-        if(record.index[0] == key[0] && record.index[1] == key[1] && record.index_delete == 0) return i;
+    int pos = 0;
+    for(int i = 0; i < new_data.size; pos+=sizeof(Record)) {
+        Record record = readRecord(new_data,pos);
+        if(0 == std::strcmp(record.index, key) && record.index_delete == LIVE) return pos;
+        else if(record.index_delete == LIVE) i+=sizeof(Record);
     }
     return -1;
 }
@@ -221,15 +217,13 @@ int Sequential_File_Definitve::searchNewDataPos(index_T key) {
 void Sequential_File_Definitve::insert(Record record) {
     int pos1 = searchNewDataPos(record.index);
     int pos2 = searchDataPos(record.index);
-    std::cout << pos1 << ' ' << pos2 << '\n';
+    record.index_delete = LIVE;
     if(pos1 != -1 || pos2 != -1) {std::cout << "Ese archivo ya existe.\n"; return;}
-    if(new_data.size < 5*sizeof(Record)) {
-        record.index_delete = 0;
+    if(new_data.size < N_new_data*sizeof(Record)) {
         if(new_data.index_delete == -1) {
             writeRecord(new_data,new_data.size,record);
             updateNewDataSize();
         } else {
-            std::cout << new_data.index_delete << '\n';
             Record record_delete = readRecord(new_data,new_data.index_delete);
             writeRecord(new_data,new_data.index_delete,record);
             updateIndexLoseDelete(new_data,record_delete);
@@ -239,7 +233,7 @@ void Sequential_File_Definitve::insert(Record record) {
         rebuild();
         insert(record);
     }
-    std::cout << new_data.size << ' ' << data.size << '\n';
+    std::cout << "data: " << data.size << " new_data: " << new_data.size << '\n' ;
 }
 
 void Sequential_File_Definitve::_delete(index_T key) {
@@ -257,7 +251,8 @@ void Sequential_File_Definitve::_delete(index_T key) {
 
 void Sequential_File_Definitve::rebuild() {
     std::vector<Record> new_records;
-    for(int i = 0; i < new_data.size; i+=sizeof(Record)) {
+    int _size = new_data.size;
+    for(int i = 0; i < _size; i+=sizeof(Record)) {
         Record record = readRecord(new_data,i);
         new_records.push_back(record);
         _delete(record.index);
@@ -265,7 +260,7 @@ void Sequential_File_Definitve::rebuild() {
     insertionSort(new_records);
     for(int i = 0; i < data.size; i+=sizeof(Record)) {
         Record record = readRecord(data,i);
-        if(record.index_delete != 0) {
+        if(record.index_delete != LIVE) {
             writeRecord(data,i,new_records[0]);
             new_records[0] = new_records.back();
             new_records.pop_back();
@@ -276,8 +271,8 @@ void Sequential_File_Definitve::rebuild() {
             insertionSort(new_records);
         }
     }
-    for(int i = 0; i < new_data.size; i+=sizeof(Record)) {
-        writeRecord(data,i+data.size,new_records[i/sizeof(Record)]);
+    for(int i = 0; i < new_records.size(); i++) {
+        writeRecord(data,i*sizeof(Record)+data.size,new_records[i]);
     }
     new_data.size = 0;
     updateDataSize();
@@ -286,7 +281,7 @@ void Sequential_File_Definitve::rebuild() {
 Record Sequential_File_Definitve::readRecord(Data _data, int pos) {
     Record record;
     std::fstream stream(_data.name, std::ios::in | std::ios::binary);
-    stream.seekg(3*sizeof(int)+pos, stream.beg);
+    stream.seekg(2*sizeof(int)+pos, stream.beg);
     stream.read((char*)&record, sizeof(Record));
     stream.close();
     return record;
@@ -294,7 +289,7 @@ Record Sequential_File_Definitve::readRecord(Data _data, int pos) {
 
 void Sequential_File_Definitve::writeRecord(Data _data, int pos, Record record) {
     std::fstream stream(_data.name, std::ios::in | std::ios::out | std::ios::binary);
-    stream.seekp(3*sizeof(int)+pos, stream.beg);
+    stream.seekp(2*sizeof(int)+pos, stream.beg);
     stream.write((char*)&record, sizeof(Record));
     _data.size += sizeof(Record);
     stream.close();
@@ -331,13 +326,13 @@ int Sequential_File_Definitve::readIndexDelete(Data _data) {
 void Sequential_File_Definitve::updateIndexNewDelete(Data &_data, int pos, Record record) {
     record.index_delete = _data.index_delete;
     _data.index_delete = pos;
-    _data.size-=sizeof(Record);
+    _data.size -= sizeof(Record);
     std::fstream stream(_data.name, std::ios::in | std::ios::out | std::ios::binary);
     stream.seekp(0, stream.beg);
     stream.write((char*)&_data.size, sizeof(int));
     stream.seekp(sizeof(int), stream.beg);
-    stream.write((char*)&pos, sizeof(int));
-    stream.seekp(3*sizeof(int)+pos, stream.beg);
+    stream.write((char*)&_data.index_delete, sizeof(int));
+    stream.seekp(2*sizeof(int)+pos, stream.beg);
     stream.write((char*)&record, sizeof(Record));
     stream.close();
 }
@@ -345,7 +340,7 @@ void Sequential_File_Definitve::updateIndexNewDelete(Data &_data, int pos, Recor
 void Sequential_File_Definitve::updateIndexLoseDelete(Data &_data, Record record) {
     _data.index_delete = record.index_delete;
     std::fstream stream(_data.name, std::ios::in | std::ios::out | std::ios::binary);
-    stream.seekp(2*sizeof(int), stream.beg);
+    stream.seekp(sizeof(int), stream.beg);
     stream.write((char*)&_data.index_delete, sizeof(int));
     stream.close();
 }
@@ -359,7 +354,7 @@ void Sequential_File_Definitve::updateNewDataSize() {
 }
 
 void Sequential_File_Definitve::updateDataSize() {
-    data.size = data.size + 5*sizeof(Record);
+    data.size = data.size + N_new_data*sizeof(Record);
     std::fstream stream(data.name, std::ios::in | std::ios::out | std::ios::binary);
     stream.seekp(0, stream.beg);
     stream.write((char*)&data.size, sizeof(int));

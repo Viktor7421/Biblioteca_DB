@@ -7,7 +7,7 @@
 #define index_T char*
 
 struct Record {
-    char index [2];
+    char index [4];
     char genus [30];
     char species [20];
     char taxa [20];
@@ -79,49 +79,52 @@ public:
     void insertionSort(std::vector<std::pair<char*, int>> &_indexs);
 };
 
-Record creacionRegistro(std::string species_id, std::string genus, std::string species, std::string taxa) {
+Record createRecord(std::string species_id, std::string genus, std::string species, std::string taxa) {
     Record record;
-    for(int i = 0; i < 2; i++) {
+    for(int i = 0; i < sizeof(record.index)-1; i++) {
         if(i < species_id.length()) {
             record.index[i] = species_id[i];
         } else {
             record.index[i] = ' ';
         }
     }
-    for(int i = 0; i < 30; i++) {
+    record.index[sizeof(record.index)-1] = '\0';
+    for(int i = 0; i < sizeof(record.genus)-1; i++) {
         if(i < genus.length()) {
             record.genus[i] = genus[i];
         } else {
             record.genus[i] = ' ';
         }
     }
-    for(int i = 0; i < 20; i++) {
+    record.genus[sizeof(record.genus)-1] = '\0';
+    for(int i = 0; i < sizeof(record.species)-1; i++) {
         if(i < species.length()) {
             record.species[i] = species[i];
         } else {
             record.species[i] = ' ';
         }
     }
-    for(int i = 0; i < 20; i++) {
+    record.species[sizeof(record.species)-1] = '\0';
+    for(int i = 0; i < sizeof(record.taxa)-1; i++) {
         if(i < taxa.length()) {
             record.taxa[i] = taxa[i];
         } else {
             record.taxa[i] = ' ';
         }
     }
+    record.taxa[sizeof(record.taxa)-1] = '\0';
     return record;
 }
 
 int main()  {
-    ISAM DataBase("pruebaisam1.dat","pruebaisam11.dat");
-    Record ave_1 = creacionRegistro("BA","Amphispiza","bilineata","Bird");
-    Record ave_2 = creacionRegistro("LF","Amphispiza","bilineata","Bird");
-    Record ave_3 = creacionRegistro("FX","Amphispiza","bilineata","Bird");
-    Record ave_4 = creacionRegistro("TW","Amphispiza","bilineata","Bird");
-    Record ave_5 = creacionRegistro("AQ","Amphispiza","bilineata","Bird");
-    Record ave_6 = creacionRegistro("VV","Amphispiza","bilineata","Bird");
+    ISAM DataBase("data_ISAM.dat","index_ISAM.dat");
+    Record ave_1 = createRecord("BA","Amphispiza","bilineata","Bird");
+    Record ave_2 = createRecord("LF","Amphispiza","bilineata","Bird");
+    Record ave_3 = createRecord("FX","Amphispiza","bilineata","Bird");
+    Record ave_4 = createRecord("TW","Amphispiza","bilineata","Bird");
+    Record ave_5 = createRecord("AQ","Amphispiza","bilineata","Bird");
+    Record ave_6 = createRecord("VV","Amphispiza","bilineata","Bird");
     DataBase.insert(ave_1);
-    //std::cout<<DataBase.search("BA").index;
     DataBase.insert(ave_2);
     DataBase.insert(ave_3);
     DataBase.insert(ave_4);
