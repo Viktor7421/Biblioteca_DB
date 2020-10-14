@@ -127,12 +127,11 @@ Record createRecord(std::string species_id, std::string genus, std::string speci
 }
 
 int main()  {
-    Sequential_File_Definitve DataBase("data_SF.dat","new_data_SF.dat");
-    DataBase.get_csv("species.csv");
-    /*Record ave_1 = createRecord("BQ","Amphispiza","bilineata","Bird");
+    /*Sequential_File_Definitve DataBase("data_SF.dat","new_data_SF.dat");
+    Record ave_1 = createRecord("BQ","Amphispiza","bilineata","Bird");
     Record ave_2 = createRecord("LQ","Amphispiza","bilineata","Bird");
-    */Record ave_3 = createRecord("AQ","Amphispiza","bilineata","Bird");
-    /*Record ave_4 = createRecord("TQ","Amphispiza","bilineata","Bird");
+    Record ave_3 = createRecord("AQ","Amphispiza","bilineata","Bird");
+    Record ave_4 = createRecord("TQ","Amphispiza","bilineata","Bird");
     Record ave_5 = createRecord("AQ","Amphispiza","bilineata","Bird");
     Record ave_6 = createRecord("VQ","Amphispiza","bilineata","Bird");
     DataBase.insert(ave_1);
@@ -140,13 +139,21 @@ int main()  {
     DataBase.insert(ave_3);
     DataBase.insert(ave_4);
     DataBase.insert(ave_5);
-    DataBase.insert(ave_6);*/
+    DataBase.insert(ave_6)
     Record ave_1 = DataBase.search(ave_3.index);
     std::cout << "Ave AQ: " << ave_1 << '\n';
+    std::cout<<"Ave TQ: "<<ave_4<<'\n';
     //Record ave_2 = DataBase.search(ave_4.index);
     //std::cout << "Ave TS: " << ave_2 << ' ' << '\n';
     //DataBase._delete(ave_3.index);
-    //DataBase._delete(ave_4.index);
+    DataBase._delete(ave_4.index);*/
+    ///Read a csv
+    /*Sequential_File_Definitve Database2("data_SF2.dat","new_data_SF2.dat");
+    std::vector<Record> species= Database2.get_csv("species.csv");
+    for(auto i=0;i<species.size();i++){
+        Record name=createRecord(species[i].index,species[i].genus,species[i].species,species[i].taxa);
+        Database2.insert(name);
+    }*/
     return 1;
 }
 
