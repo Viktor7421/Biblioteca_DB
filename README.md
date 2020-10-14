@@ -69,6 +69,9 @@ Promedio:
 | Search |     690ms            |  769ms    |
 | Delete |     839ms            |  804ms    |  
 
+## Transacciones (Thread)
+Se hicieron pruebas con hilos para simular transacciones. Se realizaron las siguientes pruebas para cada thread: Insert e Insert, Search y Search, Delte y Delete, Insert y Search, Insert y Delete, Search y Delete. Los resultados mostraron que existe sobreescritura al momento del doble Insert, esto se soluciona con un bloqueo cuando se llama a insert para evitar que se sobreescriba en la misma posición. No existe problemas con la busqueda en simultaneo debido a que solo realizan lectura. Tampoco exite problemas con el doble Delete ya que realizan la misma función de marcar como eliminado. El Insert y Search generan problemas de leer algo que aun no ha sido insertado, esto en principio no deberia ser un problema, pero en tal caso sea nesesario encontrar dicho registro simplemente se puede volver a llamar a la función hasta que se inserte el registro. El Insert y Delete no generan mucho problema, pero si existe una eliminación e inserción del mismo archivo puede generar que inserte el registro eliminado o elimine el registro recien insertado; se puede solucionar con exclusión mutua igual que con el doble Insert. El Search y Delete generan problemas de leer un archivo eliminado, para solucionarlo igual que en los anteriores realizar exclusión mutua. Cabe mencionar que en clase vimos muchisimos más errores que se pueden generar por transacciones, pero lo podemos solucionar con mecanismos como el PS, el PX y el PU.
+
 ## Data
 
 
