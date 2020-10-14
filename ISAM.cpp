@@ -9,6 +9,7 @@
 #define LIVE -2
 #define BUCKET_SIZE 27
 #define INDEX_DEAD -2
+#include <boost/algorithm/string.hpp>
 
 struct Record {
     char index [4];
@@ -80,6 +81,7 @@ public:
 
     void rebuild();
 
+    std::vector<Record> get_csv(const std::string &filename);
     Record readRecord(int pos);
     Index readIndex(int pos);
     void writeRecord(int pos, Record record);
@@ -170,16 +172,15 @@ int main()  {
     DataBase.insert(ave_3);
     DataBase.insert(ave_4);
     DataBase.insert(ave_5);
-    DataBase.insert(ave_6)
-    Record ave_1 = DataBase.search(ave_3.index);
-    std::cout << "Ave AQ: " << ave_1 << '\n';
-    std::cout<<"Ave TQ: "<<ave_4<<'\n';
-    //Record ave_2 = DataBase.search(ave_4.index);
-    //std::cout << "Ave TS: " << ave_2 << ' ' << '\n';
-    //DataBase._delete(ave_3.index);
-    DataBase._delete(ave_4.index);*/
+    DataBase.insert(ave_6);
+
+    Record ave_2 = DataBase.search(ave_1.index);
+    std::cout << ave_2 << '\n';*/
+    //DataBase._delete(ave_1.index);
+    //Record ave_2 = DataBase.search(ave_1.index);
+    //std::cout << ave_2 << '\n' ;
     ///Read a csv
-    /*Sequential_File_Definitve Database2("data_SF2.dat","new_data_SF2.dat");
+    /*ISAM Database2("data_ISAM.dat","index_ISAM.dat");
     std::vector<Record> species= Database2.get_csv("species.csv");
     for(auto i=0;i<species.size();i++){
         Record name=createRecord(species[i].index,species[i].genus,species[i].species,species[i].taxa);
@@ -436,4 +437,25 @@ void ISAM::insertionSort(std::vector<Index> &index_vector) {
         }  
         index_vector[j + 1] = key;  
     }
+}
+std::vector<Record> ISAM::get_csv(const std::string &filename) {
+    std::ifstream file(filename);
+    std::vector<std::vector<std::string >>tempdata;
+    std::vector<Record> species;
+    std::string line=" ";
+    while (getline(file,line)) {
+        std::vector<std::string> temp;
+        boost::algorithm::split(temp, line, boost::is_any_of(","));
+        tempdata.push_back(temp);
+    }
+    file.close();
+    for(std::vector<std::string> vec:tempdata){
+        Record temp;
+        strcpy(temp.index,vec[0].c_str());
+        strcpy(temp.genus,vec[1].c_str());
+        strcpy(temp.species,vec[2].c_str());
+        strcpy(temp.taxa,vec[3].c_str());
+        species.emplace_back(temp);
+    }
+    return species;
 }
