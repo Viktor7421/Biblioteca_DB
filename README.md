@@ -12,7 +12,7 @@ El objetivo de este proyecto es experimentar y comparar dos tecnicas de indexaci
 Para el Sequential File empleamos 2 archivos, uno representa toda la data con ordenada y el otro que es un auxiliar con nueva data que tambien forma parte de la base de datos. Para dicho ordenamiento se requiere de una llave que es designada por un "id" que viene en la data en este caso. 
 
 #### Constructor:
-Lee los archivos enviados y verifica si estan vacios o no, con el fin de llenar la data del head en caso este vacio y si no utilizar la data rellenada.	Lee los archivos enviados y verifica si estan vacios o no, con el fin de llenar la data del head en caso este vacio y si no utilizar la data rellenada.
+Lee los archivos enviados y verifica si estan vacios o no, con el fin de llenar la data del head en caso este vacio y si no utilizar la data rellenada.
 
 
 #### Search:
