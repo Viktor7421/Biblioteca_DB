@@ -131,27 +131,60 @@ Record createRecord(std::string species_id, std::string genus, std::string speci
     return record;
 }
 
+ISAM DataBase("data_ISAM.dat","index_ISAM.dat");
+
+void * Thread1(void * vargp) {
+    Record ave = createRecord("MN","Amphispiza","bilineata","Bird");
+    DataBase.insert(ave);
+    //Record ave_result = DataBase.search(ave.index);
+    //std::cout << ave_result << '\n';
+    //DataBase._delete(ave.index);
+    return NULL;
+}
+
+void * Thread2(void * vargp) {
+    Record ave = createRecord("MN","Amphispiza","bilineata","Bird");
+    //DataBase.insert(ave);
+    Record ave_result = DataBase.search(ave.index);
+    std::cout << ave_result << '\n';
+    //DataBase._delete(ave.index);
+    return NULL;
+}
+
 int main()  {
-    ISAM DataBase("data_ISAM.dat","index_ISAM.dat");
-    Record ave_1 = createRecord("LS","Amphispiza","bilineata","Bird");
-    /*
-    Record ave_2 = createRecord("LS","Amphispiza","bilineata","Bird");
-    Record ave_3 = createRecord("FZ","Amphispiza","bilineata","Bird");
-    Record ave_4 = createRecord("TG","Amphispiza","bilineata","Bird");
-    Record ave_5 = createRecord("AW","Amphispiza","bilineata","Bird");
-    Record ave_6 = createRecord("VB","Amphispiza","bilineata","Bird");
+
+    pthread_t thread_id;
+    pthread_create(&thread_id, NULL, Thread1, NULL);
+    pthread_create(&thread_id, NULL, Thread2, NULL);
+    pthread_join(thread_id, NULL);
+    pthread_join(thread_id, NULL);
+
+    /*Record ave_1 = createRecord("BQ","Amphispiza","bilineata","Bird");
+    Record ave_2 = createRecord("LQ","Amphispiza","bilineata","Bird");
+    Record ave_3 = createRecord("AQ","Amphispiza","bilineata","Bird");
+    Record ave_4 = createRecord("TQ","Amphispiza","bilineata","Bird");
+    Record ave_5 = createRecord("AQ","Amphispiza","bilineata","Bird");
+    Record ave_6 = createRecord("VQ","Amphispiza","bilineata","Bird");
     DataBase.insert(ave_1);
     DataBase.insert(ave_2);
     DataBase.insert(ave_3);
     DataBase.insert(ave_4);
     DataBase.insert(ave_5);
-    DataBase.insert(ave_6);
-    */
-    Record ave_2 = DataBase.search(ave_1.index);
-    std::cout << ave_2 << '\n';
-    //DataBase._delete(ave_1.index);
-    //Record ave_2 = DataBase.search(ave_1.index);
-    //std::cout << ave_2 << '\n' ;
+    DataBase.insert(ave_6)
+    Record ave_1 = DataBase.search(ave_3.index);
+    std::cout << "Ave AQ: " << ave_1 << '\n';
+    std::cout<<"Ave TQ: "<<ave_4<<'\n';
+    //Record ave_2 = DataBase.search(ave_4.index);
+    //std::cout << "Ave TS: " << ave_2 << ' ' << '\n';
+    //DataBase._delete(ave_3.index);
+    DataBase._delete(ave_4.index);*/
+    ///Read a csv
+    /*Sequential_File_Definitve Database2("data_SF2.dat","new_data_SF2.dat");
+    std::vector<Record> species= Database2.get_csv("species.csv");
+    for(auto i=0;i<species.size();i++){
+        Record name=createRecord(species[i].index,species[i].genus,species[i].species,species[i].taxa);
+        Database2.insert(name);
+    }*/
     return 1;
 }
 

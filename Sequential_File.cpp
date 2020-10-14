@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <thread>
 #include <boost/algorithm/string.hpp>
 
 #define index_T char*
@@ -126,9 +127,35 @@ Record createRecord(std::string species_id, std::string genus, std::string speci
     return record;
 }
 
+Sequential_File DataBase("data_SF.dat","new_data_SF.dat");
+
+void * Thread1(void * vargp) {
+    Record ave = createRecord("MN","Amphispiza","bilineata","Bird");
+    DataBase.insert(ave);
+    //Record ave_result = DataBase.search(ave.index);
+    //std::cout << ave_result << '\n';
+    //DataBase._delete(ave.index);
+    return NULL;
+}
+
+void * Thread2(void * vargp) {
+    Record ave = createRecord("MN","Amphispiza","bilineata","Bird");
+    //DataBase.insert(ave);
+    Record ave_result = DataBase.search(ave.index);
+    std::cout << ave_result << '\n';
+    //DataBase._delete(ave.index);
+    return NULL;
+}
+
 int main()  {
-    Sequential_File DataBase("data_SF.dat","new_data_SF.dat");
     DataBase.get_csv("species.csv");
+
+    pthread_t thread_id;
+    pthread_create(&thread_id, NULL, Thread1, NULL);
+    pthread_create(&thread_id, NULL, Thread2, NULL);
+    pthread_join(thread_id, NULL);
+    pthread_join(thread_id, NULL);
+
     /*Record ave_1 = createRecord("BQ","Amphispiza","bilineata","Bird");
     Record ave_2 = createRecord("LQ","Amphispiza","bilineata","Bird");
     Record ave_3 = createRecord("AQ","Amphispiza","bilineata","Bird");
