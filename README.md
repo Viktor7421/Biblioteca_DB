@@ -35,7 +35,7 @@ Lee los archivos enviados y verifica si estan vacios o no, con el fin de llenar 
 La busqueda es por indice y no permite busqueda por rango. Tambien cabe mencionar al igual que el anterior la busqueda por rango se puede implementar con un puntero que apunte al siguiente ordenado o simplemente recorriendo el arreglo de indices. La complejidad es O(logN) realizando la busqueda en el archivo indexado para luego llamar al registro en el archivo con la data.
 
 #### Insert:
-La inserción es O(1) para debido a que siempre se inserta al final y el archivo con los indices se ordena en memoria. Comentar que el manejo de el ordenamiento en memoria se debe controlar ya que si llega al momento donde el archivo de indices llega a ser demasiado grande no se podra seguir ordenando en memoria y se tendra que ordenar por acceso a disco lo cual podria costar O(N). Mencionar que para el ordenamiento en memoria se usa insertion sort(O($n^2$)).
+La inserción es O(1) para debido a que siempre se inserta al final y el archivo con los indices se ordena en memoria. Comentar que el manejo de el ordenamiento en memoria se debe controlar ya que si llega al momento donde el archivo de indices llega a ser demasiado grande no se podra seguir ordenando en memoria y se tendra que ordenar por acceso a disco lo cual podria costar O(N). Mencionar que para el ordenamiento en memoria se usa insertion sort(O(n^2)).
 
 #### Delete:
 El delete es simple y por medio de search encuentra el registro marca el indice apuntando a nada y el registro se marca como elimindo. Los archivos eliminados siguen apuntado parecido al anterior el head apunta al registro eliminado y el registro eliminado apunta al que apuntaba el head.
