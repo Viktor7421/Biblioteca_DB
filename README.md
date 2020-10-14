@@ -28,10 +28,21 @@ El delete es muy sencillo y solo requiere de por medio de search encontrar la po
 ### ISAM
 Para el ISAM se empleó el Dense Index File, también se requirió de 2 archivos, uno para la data sin orden u organización alguna, y el otro como indice que guarda la posición de los registros con su key.
 
+#### Constructor:
+Lee los archivos enviados y verifica si estan vacios o no, con el fin de llenar la data del head en caso este vacio y si no utilizar la data rellenada.
 
-##Resultados experimentales
+#### Search:
+La busqueda es por indice y no permite busqueda por rango. Tambien cabe mencionar al igual que el anterior la busqueda por rango se puede implementar con un puntero que apunte al siguiente ordenado o simplemente recorriendo el arreglo de indices. La complejidad es O(logN) realizando la busqueda en el archivo indexado para luego llamar al registro en el archivo con la data.
 
-###Sequential File
+#### Insert:
+La inserción es O(1) para debido a que siempre se inserta al final y el archivo con los indices se ordena en memoria. Comentar que el manejo de el ordenamiento en memoria se debe controlar ya que si llega al momento donde el archivo de indices llega a ser demasiado grande no se podra seguir ordenando en memoria y se tendra que ordenar por acceso a disco lo cual podria costar O(N). Mencionar que para el ordenamiento en memoria se usa insertion sort(O($n^2$)).
+
+#### Delete:
+El delete es simple y por medio de search encuentra el registro marca el indice apuntando a nada y el registro se marca como elimindo. Los archivos eliminados siguen apuntado parecido al anterior el head apunta al registro eliminado y el registro eliminado apunta al que apuntaba el head.
+
+## Resultados experimentales
+
+### Sequential File
 
 |        | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | P9 | P10 |
 |--------|----|----|----|----|----|----|----|----|----|-----|
