@@ -41,9 +41,9 @@ La inserción es O(1) para debido a que siempre se inserta al final y el archivo
 #### Delete:
 El delete es simple y por medio de search encuentra el registro marca el indice apuntando a nada y el registro se marca como elimindo. Los archivos eliminados siguen apuntado parecido al anterior el head apunta al registro eliminado y el registro eliminado apunta al que apuntaba el head.
 
-##Resultados experimentales
+## Resultados experimentales
 
-###Sequential File
+### Sequential File
 
 |        | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | P9 | P10 |
 |--------|----|----|----|----|----|----|----|----|----|-----|
@@ -52,7 +52,7 @@ El delete es simple y por medio de search encuentra el registro marca el indice 
 | Search |749ms|689ms|691ms|668ms|701ms|670ms|671ms|700ms|695ms|664ms|
 | Delete |825ms|814ms|840ms|864ms|834ms|806ms|845ms|861ms|828ms|811ms|
 
-###Dense Index File
+### Dense Index File
 
 |        | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 | P9 | P10 |
 |--------|----|----|----|----|----|----|----|----|----|-----|
