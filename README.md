@@ -84,3 +84,7 @@ El Sequential File si no se controla puede llegar a generar reconstrucciones que
 
 ### Tipos de Datos
 A partir de la discusión definimos que el Sequential File trabaja más comodo con muchisimos registros y pocos atributos, disminuyendo el espacio del arreglo auxiliar y que utilice principalmente haga busquedas de inserciones recientes. Por otro lado el ISAM se ve más beneficiado con multiples atributos y menor cantidad de registros (dependiendo del espacio de ram de la maquina); ya que pueden realizar busquedas en memoria de manera más eficiente.
+
+## Video
+https://www.youtube.com/watch?v=ZTXKXsOm10w&feature=youtu.be&ab_channel=LuisFrancescoCorderoPinela
+
